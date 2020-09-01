@@ -398,5 +398,157 @@ spec:
 Showing pods without headers. Useful when we need to count pods with `| wc -l`
 
 ```
-kubectl get pods --no-headers | wc -l 
+kubectl get pods --no-headers | wc -l
 ```
+
+
+
+## Services
+
+- Services exposes your application to outside of the application.
+- Services enables a user outside of the cluster to access an application in the pod inside of the cluster. Example when a user access your web application inside of the cluster in a pod
+- Services helps communication between other Services
+
+
+### There are 03 types of Services
+
+- NodePort
+- ClusterIP
+- LoadBalancer
+
+
+
+* NodePort is were the service makes an internal POD accessible on a Port on the Node.
+
+
+* ClusterIP Service creates a virtual IP inside the cluster to enable communication between different services such as a set of front end servers to a set of back end servers.
+
+- LoadBalancer is where it provisions a load balancer for our service in supported cloud providers. A good example of that would be to distribute load across the different web servers in your front end tier.
+
+
+#### NodePort
+
+- Lets consider we have a container running nginx and exposes port 80 to the pod. We call this port as "Target Port".
+
+- The service communicate with the container through the port 80 which we call as a "Port", this is the Service port itself. It has a specific IP inside of the Cluster.
+
+- The service has a "NodePort" which is the port that the Service exposes to world outside of the node. This NodePort should be between 30000 to 32767. We use labels and Selectors to link the service to the Pod. The pod has labels and we need bring those labels as Selector in the Service definition file.
+
+Lets see the service definition file
+
+nodepod-service-definition.yaml
+```
+apiVersion: v1
+kind: Service
+metadata:
+   name: app-service
+
+spec:
+   type: NodePort
+   ports:
+     - targetPort: 80
+       port: 80
+       nodePort: 30008  
+   selector:
+      app: my-app
+      type: front-end
+```
+
+Creating a service
+```
+kubectl create  -f nodepod-service-definition.yaml
+```
+
+
+Showing services created
+```
+kubectl get services
+```
+
+Note:
+We use the Node IP and NodePort to access the application. Example:
+```
+curl https://192.168.1.2:30008
+
+
+If we have a our application in 03 pods in 03 Nodes, one pod each node, when we create a service it is going to create this service in those 03 differents nodes. So we can access the service by using one of those 03 Nodes IPs followed by a port ( 30008 ). Example:
+curl https://192.168.0.2:30008
+curl https://192.168.0.3:30008
+curl https://192.168.0.4:30008
+
+
+#### Cluster IP
+
+
+- Lets consider we have 03 pod running front-end and 03 pods running back end
+- We can have a service clusterIP called back-end wich will make the 03 backend pod available to frontend pods. This way even the backend pod dies and get a new IP the service will be the same and will choose the better pod to forward the request.
+- Each service has an IP and name.
+
+
+
+Lets see our definition file
+
+service-clusterip-definition.yaml
+```
+apiVersion: v1
+kind: Service
+metadata:
+   name: myapp-service
+spec:
+   type: ClusterIP
+   ports:
+     - targetPort: 80
+       port: 80
+   selector:
+      app: my-app
+      type: back-end
+```
+
+
+# Hands on with Deployment and Service
+
+
+## Lets create a deployment from this yaml file
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: httpd-frontend
+  name: httpd-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpd-frontend
+  template:
+    metadata:
+      labels:
+        app: httpd-frontend
+    spec:
+      containers:
+      - image: httpd:2.4-alpine
+        name: httpd
+```
+
+Note: To access this deployment / pod running httpd-alpine we need to expose a port outside of the Node, and we need a service for this.
+
+## Lets create a service that will expose that httpd-alpine to the world by using a service of type NodePort
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-service
+spec:
+  type: NodePort
+  selector:
+          app: httpd-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30008
+```
+
+Note: Realise that we added selector "app: httpd-frontend" which is the same label of the deployment create and consequently same label of the pod
