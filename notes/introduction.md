@@ -469,12 +469,16 @@ Note:
 We use the Node IP and NodePort to access the application. Example:
 ```
 curl https://192.168.1.2:30008
+```
 
 
 If we have a our application in 03 pods in 03 Nodes, one pod each node, when we create a service it is going to create this service in those 03 differents nodes. So we can access the service by using one of those 03 Nodes IPs followed by a port ( 30008 ). Example:
+```
 curl https://192.168.0.2:30008
 curl https://192.168.0.3:30008
 curl https://192.168.0.4:30008
+```
+
 
 
 #### Cluster IP
