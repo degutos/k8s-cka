@@ -301,6 +301,22 @@ kubectl create deployment --image=nginx nginx --dry-run -o yaml > nginx-deployme
 
 Save it to a file, make necessary changes to the file (for example, adding more replicas) and then create the deployment.
 
+
+Create pod using dry-run to create a yaml file
+
+$ kubectl run redis --image=redis --dry-run=client -o yaml > pod.yaml
+
+To execute the yaml file and create a pod
+
+$ kubectl apply -f pod.yaml
+
+
+How to edit pod while Running
+
+$ kubectl edit pod redis
+
+
+
 ```
 
 
@@ -485,7 +501,7 @@ curl https://192.168.0.4:30008
 
 
 - Lets consider we have 03 pod running front-end and 03 pods running back end
-- We can have a service clusterIP called back-end wich will make the 03 backend pod available to frontend pods. This way even the backend pod dies and get a new IP the service will be the same and will choose the better pod to forward the request.
+- We can have a service clusterIP called back-end which will make the 03 backend pod available to frontend pods. This way even the backend pod dies and get a new IP the service will be the same and will choose the better pod to forward the request.
 - Each service has an IP and name.
 
 
