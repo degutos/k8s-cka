@@ -125,6 +125,8 @@ myapp-rc-wtl4t   1/1     Running   0          5s
 #### ReplicaSets
 
 Note:
+- ReplicasSets and and ReplicationController are very similar. ReplicasSet is currently used
+- They are usually used for High Availability, load balancing and scaling
 - Very similar to replicationController
 - Replicaset will control the number of pod by using the field selector and matchLabels
 - The field matchLabels should matches with the pod label. Example:
@@ -264,6 +266,33 @@ Repeat the above command till delete all pods.
 - We can pause all the environment make a change and resume again, in case we need of this resource
 - When we create a deployment, kubernetes create deployment, replicaset and pods all together
 - The deployment definition file is similar to replicaset definition file except for the kind which is Deployment instead ReplicaSet
+
+#### Example of yaml file to create a deployment
+
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+```
 
 
 
