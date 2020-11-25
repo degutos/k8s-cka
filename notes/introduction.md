@@ -265,6 +265,7 @@ Repeat the above command till delete all pods.
 - We can undo deployment update if something went wrong by rolling back to last version stable.
 - We can pause all the environment make a change and resume again, in case we need of this resource
 - When we create a deployment, kubernetes create deployment, replicaset and pods all together
+- The command "Kubectl get all" show us all the above resources created
 - The deployment definition file is similar to replicaset definition file except for the kind which is Deployment instead ReplicaSet
 
 #### Example of yaml file to create a deployment
@@ -297,9 +298,92 @@ spec:
 
 
 
-Tips on how to create yaml file in a easier way
+#### Tips on how to create yaml file in a easier way
 
 ```
+Create an NGINX Pod
+
+
+
+ubuntu@andre-vsi-dal-ubuntu-master:~$ kubectl run nginx --image=nginx
+pod/nginx created
+
+ubuntu@andre-vsi-dal-ubuntu-master:~$ kubectl get pod
+NAME    READY   STATUS    RESTARTS   AGE
+nginx   1/1     Running   0          13s
+
+
+
+Generate POD Manifest YAML file (-o yaml). Don't create it(--dry-run) and print the output on the screen
+
+ubuntu@andre-vsi-dal-ubuntu-master:~$ kubectl run nginx --image=nginx --dry-run=client -o yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: nginx
+  name: nginx
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+
+
+
+Create a deployment (also create replicaset and pod)
+
+kubectl create deployment --image=nginx nginx
+
+
+
+Generate Deployment YAML file (-o yaml). Don't create it(--dry-run)
+
+ubuntu@andre-vsi-dal-ubuntu-master:~$ kubectl create deployment --image=nginx nginx --dry-run=client -o yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources: {}
+status: {}
+
+
+Generate Deployment YAML file (-o yaml). Don't create it(--dry-run) with 4 Replicas (--replicas=4)
+
+kubectl create deployment --image=nginx nginx --dry-run=client -o yaml > nginx-deployment.yaml
+
+ubuntu@andre-vsi-dal-ubuntu-master:~$ kubectl create deployment --image=nginx nginx --dry-run=client -o yaml > nginx-deployment.yaml
+
+ubuntu@andre-vsi-dal-ubuntu-master:~$ ls -l nginx-*
+-rw-rw-r-- 1 ubuntu ubuntu 384 Nov 24 22:13 nginx-deployment.yaml
+
+Save it to a file, make necessary changes to the file (for example, adding more replicas) and then create the deployment.
+
+
+
+
 Create an NGINX Pod
 
 kubectl run --generator=run-pod/v1 nginx --image=nginx
@@ -316,6 +400,10 @@ Create a deployment
 
 kubectl create deployment --image=nginx nginx
 
+
+Generate Deployment YAML file (-o yaml) Dont create it (dry-run=client) with 03 Replicas
+
+kubectl create deployment --image=httpd:2.4-alpine httpd-frontend --replicas=3 --dry-run=client -o yaml > deployment-httpd-frontend.yaml
 
 
 Generate Deployment YAML file (-o yaml). Don't create it(--dry-run)
@@ -439,6 +527,13 @@ spec:
       limits.cpu: "20"
       limits.memory: 20Gi
 ```
+
+Checking how many pods there are on spcecific namespace
+
+$ kubectl get pods --namespace=research
+NAME    READY   STATUS             RESTARTS   AGE
+dna-1   0/1     CrashLoopBackOff   2          68s
+dna-2   0/1     CrashLoopBackOff   2          68s
 
 Showing pods without headers. Useful when we need to count pods with `| wc -l`
 
