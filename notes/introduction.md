@@ -696,3 +696,112 @@ spec:
 ```
 
 Note: Realise that we added selector "app: httpd-frontend" which is the same label of the deployment create and consequently same label of the pod
+
+
+
+
+
+##  Checking Services existing
+
+```
+controlplane $ kubectl get services
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   2m17s
+controlplane $ kubectl get svc
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   2m26s
+```
+
+
+## Getting more information about a service
+
+```
+controlplane $ kubectl describe service kubernetes
+Name:              kubernetes
+Namespace:         default
+Labels:            component=apiserver
+                   provider=kubernetes
+Annotations:       <none>
+Selector:          <none>
+Type:              ClusterIP
+IP:                10.96.0.1
+Port:              https  443/TCP
+TargetPort:        6443/TCP
+Endpoints:         172.17.0.12:6443
+Session Affinity:  None
+Events:            <none>
+```
+
+
+## Lets create a Service when we already have a pod/Deployment running. Consider the following Pod/Deployment running
+
+```
+controlplane $ kubectl describe deployment simple-webapp-deployment
+Name:                   simple-webapp-deployment
+Namespace:              default
+CreationTimestamp:      Sat, 05 Dec 2020 15:27:19 +0000
+Labels:                 <none>
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               name=simple-webapp
+Replicas:               4 desired | 4 updated | 4 total | 4 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:  name=simple-webapp
+  Containers:
+   simple-webapp:
+    Image:        kodekloud/simple-webapp:red
+    Port:         8080/TCP
+    Host Port:    0/TCP
+    Environment:  <none>
+    Mounts:       <none>
+  Volumes:        <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   simple-webapp-deployment-b56f88b77 (4/4 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  67s   deployment-controller  Scaled up replica set simple-webapp-deployment-b56f88b77 to 4
+```
+
+## To create the service according to the above deployment created we need the following yaml file:
+
+```
+controlplane $ cat service-definition-1.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-service
+spec:
+  type: NodePort
+  ports:
+    - targetPort: 8080
+      port: 8080
+      nodePort: 30080
+  selector:
+    name: simple-webapp
+```
+
+
+
+## Creating the service according to the yaml file:
+
+```
+controlplane $ kubectl create -f service-definition-1.yaml
+service/webapp-service created
+```
+
+We could also use  the expose command to create a service or create a yaml file
+
+```
+$ kubectl expoese deployment simple-webapp-deployment --name=webapp-service --type=NodePort --target-port=8080 port=8080  --dry-run=client -o yaml > svc.yaml
+```
+
+After creating the file, we need to edit it and add nodePort: 30080 to the file
