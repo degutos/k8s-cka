@@ -805,3 +805,82 @@ $ kubectl expoese deployment simple-webapp-deployment --name=webapp-service --ty
 ```
 
 After creating the file, we need to edit it and add nodePort: 30080 to the file
+
+
+
+## Imperative vs Declarative approach
+
+### Imperative
+
+On Imperative approach we instruct the kubernetes what do to. Example:
+
+To create a pod:
+
+```
+$ kubectl run --image=nginx nginx
+```
+
+To create a deployment:
+
+```
+$  kubectl create deploymeent  --image=nginx nginx
+```
+
+To expose deployment by creating a service
+
+```
+$ kubecttl expose deployment nginx --port 80
+```
+
+
+To edit deployment
+
+```
+kubectl edit deployment nginx  
+```
+
+
+To scale a deployment or replicaSet:
+
+```
+$ kubectl  scale deployment nginx --replicas=5
+```
+
+
+To change a image on a  deployment:
+
+```
+$ kubectl set image deployment nginx nginx=nginx:1.18
+```
+
+We can also use files to create object by using:
+
+```
+$ kubectl create -f nginx.yaml
+```
+
+or  we still can edit or  delete objects:
+
+```
+$ kubectl  edit deployment nginx
+$ kubecttl replace -f nginx.yaml
+$ kubectl delete -f nginx.YAML
+```
+
+
+Note:
+When we use edit command above we edit the kubernete cache object and not the yaml file, every modification will reflect direct to kubernetes memory  and  not the nginx.yaml file. If  we want to track modifications we should change the  yaml file instead using the edit command, after modifying the nginx.yaml file we have to run the command "kubectl replace -f nginx.yaml"
+
+
+All the above examples are  Imperative Approaches to manage object in kubernetes
+
+
+### Declarative
+
+We can use apply command to create, edit and delete objects:
+
+``` 
+$ kubectl apply -f nginx.yaml
+```
+
+The apply command is inteligent enough to make changes without errors, doensn't matter if the object exists or not, if not it will create the object if exists  it will modify according to yaml file
