@@ -1,5 +1,92 @@
 # Introduction
 
+## Overview
+
+These are the main Kubernetes Compnents summarized:
+
+- Pod
+- Service
+- Ingress
+- ConfigMap
+- Secrets
+- Volumes
+- Deployment
+- StatefulSet
+
+Lets summarize each of these main core K8s components
+
+#### Pod
+
+Pod is the basic and smallest element k8s will manage. Each pod has it own IP and it usually have one container inside. Pod runs containers with your application, example: nginx, db-mongo, etc. Pods Ips are changed when the pod dies, a new pod is created and a new IP is assigned.
+
+#### Service
+
+Service will allow comunication between Pods, is uses permanent IP, each Pod has it own service. If we have a node with two pods inside one for my-app and another one for DB each of these pods will have his own service. A Pod can die and the service wouldn't. 
+
+We can have also external Service which will allow external communication to the Node, for example when you would like to allow external user to access your application inside of the Cluster. So we can have external service for the just commented situation and internal service to allow internal communication between Pods, for example to your application pod access the DB pod.
+
+
+#### Ingress
+
+Ingress can be used very similar to External service and its own purpose is to allow external communication between the user and the application pod. Instead of creating external service we can create an ingress component on k8s and allow comunication to internal service. 
+
+Ingress will give an external address like https://my-app.com
+
+So the external user communication to the Ingress through the address https://my-app.com which will redirect the user to the internal service for my-app, then my-app service will communicate with db service
+
+
+#### ConfigMap
+
+Lets consider we have one Node with 02 pods: my-app and db, each of these pods have it own service (internal). The application access the db using the databse URL which usually is set in the application. When the application url changes for some reason we would have to deploy (rebuil) a new application with the new URL in order to the comunication work.
+
+To fix the problem k8s has a component called ConfigMap which can store configuration data like database URL, and external configuration of your application, also user and password if needed although it is not safe store sensitive data in this file as a plain text. 
+ConfigMap are attached to the pod so the pod can get data from ConfigMap file and read variables needed. 
+
+If your DB URL changes we can just fix the ConfigMap file with the new URL and that's all.
+
+User database and password can also change, although as mentioned before it is not safe and secure to store sensitive data into ConfigMap file, for that you may use Secrets k8s component.
+
+#### Secrets
+
+Secrets are like ConfigMap but it can be stored not just as a plain text but store as a secret data in 64 encode format. Secrets could config things like user and password also certificates. This would avoid us to rebuild the pod in case any password user changes.
+
+
+#### Volumes
+
+
+Pods data are not persistent, if a DB pod get restarted the data would be gone, this is the default behaviour of pod, k8s doesn't take care of our data, we need to manage and persist our data.
+
+To have data persistent is using another componement called Volumes. Volumes are created from hard drives, storages, local or remote through the network outside of k8s cluster, even on cloud.
+
+Once we have our k8s cluster with Volumes accessing an storage (remote or local) we would have our data persistent.
+
+
+#### Deployments
+
+Deployments are responsible to make my pod is running and make sure a new pod would be created in case the pod is not responding, even if you try delete the pod the deployment would create a new pod with an image for your application. 
+
+Also it can scale up or scale pods down. We can set a number of 03 pods for my application and the deployment will make sure it has always 03 pods running for the application so if you one application (pod) dies, it has other 02 pods running until the deployment creates a new pod to replace the dead one.
+
+If we have 02 or more nodes in our cluster the deployment would split those nodes into different nodes to garantee the cluster would be up even we one Node goes down.
+
+Deployments uses replicas as a load balancer also if you have more pods for the same application.
+
+DB pods can't be used as deployment since DB servers need data consistent and has state data and can not be replicated to another DB server through the deployments. For this we would need StefulSet which is useful specially for DB server in k8s 
+
+
+#### StatefulSet
+
+StatefulSet are like deployments but specially for DB server. StatefulSet can scale DB pod up or down, re-create DB pods but with data consistently.
+
+So deployment is for application as the StatefulSet is for DB pods.
+
+
+
+**PS: Lets talk again with more details about POD**
+
+
+### Pod
+
 This is the main elements inside of our pod yaml file that specify instruction on how to create a pod.
 
 pod-structure.yaml
