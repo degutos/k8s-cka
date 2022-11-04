@@ -739,9 +739,11 @@ spec:
 #### LoadBalancer
 
 - When we have services of type NodePort provisioned in different hosts hypervisors we can access the service through the Node IP, Example:
+```
 http://102.168.56.70:30008
 http://102.168.56.71:30008
 http://102.168.56.72:30008
+```
 
 Although this is not what customer wants, they want to access through something like http://example-volte.com, for this we will need a LoadBalancer Service to get the request and forward to the pods.
 
@@ -764,7 +766,7 @@ spec:
       app: my-app
       type: back-end
 ```
- 
+
 
 
 # Hands on with Deployment and Service
