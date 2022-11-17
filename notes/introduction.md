@@ -1004,3 +1004,44 @@ $ kubectl apply -f nginx.yaml
 ```
 
 The apply command is inteligent enough to make changes without errors, doensn't matter if the object exists or not, if not it will create the object if exists  it will modify according to yaml file
+
+
+
+# Important note about editing PODs and Deployments
+
+## Editing POD
+
+`Remember, you CANNOT edit specifications of an existing POD other than the below.`
+
+```
+spec.containers[*].image
+
+spec.initContainers[*].image
+
+spec.activeDeadlineSeconds
+
+spec.tolerations
+```
+
+When we run `kubectl edit pod <pod name>` we will not be able to edit properties required, we will be denied to save modifications.
+
+Solution 1:
+
+Save the modifications to a temp file `/tmp/kubectl-edit-ccvrq.yaml`
+Delete the pod `kubectl delete pod webapp`
+Then create the new pod with the changes made kubectl create -f `/tmp/kubectl-edit-ccvrq.yaml`
+
+Solutions 2:
+
+```
+kubectl get pod webapp -o yaml > my-new-pod.yaml
+vi my-new-pod.yaml
+kubectl delete pod webapp
+kubectl create -f my-new-pod.yaml
+```
+
+## Editing Deployments
+
+With Deployments you can easily edit any field/property of the POD template. Since the pod template is a child of the deployment specification,  with every change the deployment will automatically delete and create a new pod with the new changes. So if you are asked to edit a property of a POD part of a deployment you may do that simply by running the command
+
+`kubectl edit deployment my-deployment`
