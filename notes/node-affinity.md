@@ -11,7 +11,7 @@ kind: Deployment
 metadata:
   creationTimestamp: null
   labels:
-    app: blue
+    app: blue 
   name: blue
 spec:
   replicas: 6
