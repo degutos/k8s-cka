@@ -2,7 +2,7 @@
 
 ## Overview
 
-These are the main Kubernetes Compnents summarized:
+These are the main Kubernetes Components summarized:
 
 - Pod
 - Service
@@ -21,14 +21,14 @@ Pod is the basic and smallest element k8s will manage. Each pod has it own IP an
 
 #### Service
 
-Service will allow comunication between Pods, is uses permanent IP, each Pod has it own service. If we have a node with two pods inside one for my-app and another one for DB each of these pods will have his own service. A Pod can die and the service wouldn't. 
+Service will allow communication between Pods, is uses permanent IP, each Pod has it own service. If we have a node with two pods inside one for my-app and another one for DB each of these pods will have his own service. A Pod can die and the service wouldn't. 
 
 We can have also external Service which will allow external communication to the Node, for example when you would like to allow external user to access your application inside of the Cluster. So we can have external service for the just commented situation and internal service to allow internal communication between Pods, for example to your application pod access the DB pod.
 
 
 #### Ingress
 
-Ingress can be used very similar to External service and its own purpose is to allow external communication between the user and the application pod. Instead of creating external service we can create an ingress component on k8s and allow comunication to internal service. 
+Ingress can be used very similar to External service and its own purpose is to allow external communication between the user and the application pod. Instead of creating external service we can create an ingress component on k8s and allow communication to internal service. 
 
 Ingress will give an external address like https://my-app.com
 
@@ -37,7 +37,7 @@ So the external user communication to the Ingress through the address https://my
 
 #### ConfigMap
 
-Lets consider we have one Node with 02 pods: my-app and db, each of these pods have it own service (internal). The application access the db using the databse URL which usually is set in the application. When the application url changes for some reason we would have to deploy (rebuil) a new application with the new URL in order to the comunication work.
+Lets consider we have one Node with 02 pods: my-app and db, each of these pods have it own service (internal). The application access the db using the databse URL which usually is set in the application. When the application url changes for some reason we would have to deploy (rebuil) a new application with the new URL in order to the communication work.
 
 To fix the problem k8s has a component called ConfigMap which can store configuration data like database URL, and external configuration of your application, also user and password if needed although it is not safe store sensitive data in this file as a plain text. 
 ConfigMap are attached to the pod so the pod can get data from ConfigMap file and read variables needed. 
