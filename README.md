@@ -75,10 +75,55 @@ $ kubectl run hello-minikube
 
 #### ContainerD x Docker
 
-Docker was discontinued from kubernetes project, they refused to work under the kubernetes convention pattern.
+Docker was discontinued from kubernetes project, they refused to work under the kubernetes convention pattern. Docker refused to adapt his application to use Kubernetes CRI (Container runtime Interface)
 
 - Containerd comes with ctr CLI
 - Not very user friendly 
 - only supports limited features 
 - ctr is more used for debugging containerd
 - The nerdctl tool provides stable and human-friendly user experience.
+
+Lets see ctr commands 
+
+```
+$ ctr 
+$ ctr images pull docker.io/library/redis:alpine
+$ ctr run docker.io/library/redis:alpine redis
+```
+
+- nerdctl pprovides a docker cli experience
+- nerdctl supports docker compose
+- nerdctl suports encrypted container images
+- Lazy pulling 
+- P2P image distribution
+- namespace in kubernetes 
+
+Nerdctl has commands very similar to docker
+```
+$ nerdctl 
+$ nerdctl run --name redis redis:alpine
+$ nerdctl run --name webserver -p 80:80 -d nginx
+```
+
+##### crictl 
+
+- Kubernetes recently created another CLI tool called crictl 
+- crictl provides a cli for cri compatible container runtimes
+- It is a independent tool developed by kubernetes 
+- It has to be installed separately 
+- Used to inspect and debug container runtimes but not to create containers
+- works across different runtimes
+
+
+
+```
+$ crictl
+$ crictl pull busybox
+$ crictl images
+$ crictl ps -a
+$ crictl exec -i -t 1947763542940 ls
+$ crictl logs 1947763542940
+$ crictl pods 
+```
+
+IMPORTANT: crictl supports reading pods
