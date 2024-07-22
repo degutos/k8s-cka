@@ -71,3 +71,14 @@ $ kubectl cluster-info
 
 $ kubectl run hello-minikube
 ```
+
+
+#### ContainerD x Docker
+
+Docker was discontinued from kubernetes project, they refused to work under the kubernetes convention pattern.
+
+- Containerd comes with ctr CLI
+- Not very user friendly 
+- only supports limited features 
+- ctr is more used for debugging containerd
+- The nerdctl tool provides stable and human-friendly user experience.
