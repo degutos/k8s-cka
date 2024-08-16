@@ -142,6 +142,33 @@ To see details (describe) of a pod:
 $ kubectl describe pod myapp-pod
 ```
 
+To see the pods in real time with --watch
+
+```
+controlplane ~ ➜  k get pod --watch
+NAME            READY   STATUS         RESTARTS   AGE
+nginx           1/1     Running        0          18m
+newpods-dvrd5   1/1     Running        0          15m
+newpods-f8zbp   1/1     Running        0          15m
+newpods-5tlnx   1/1     Running        0          15m
+redis           0/1     ErrImagePull   0          11s
+redis           0/1     ImagePullBackOff   0          14s
+redis           0/1     ErrImagePull       0          25s
+redis           0/1     ImagePullBackOff   0          38s
+redis           0/1     ErrImagePull       0          50s
+redis           0/1     ImagePullBackOff   0          64s
+```
+
+
+#### How to exec into a pod
+
+```
+controlplane ~ ➜  kubectl exec -it redis -- /bin/bash
+root@redis:/data# 
+```
+
+
+
 
 
 ## ReplicaSets
@@ -627,6 +654,22 @@ Showing pods without headers. Useful when we need to count pods with `| wc -l`
 ```
 kubectl get pods --no-headers | wc -l
 ```
+
+How to create a pod in a finance namespace
+
+```
+controlplane ~ ➜  kubectl run redis --image=redis -n finance
+pod/redis created
+```
+
+How to list all namespaces and filter by pod name
+
+```
+controlplane ~ ➜  kubectl get pods -A | grep blue
+marketing       blue                                      1/1     Running            0               5m40s
+```
+
+
 
 
 
