@@ -1098,3 +1098,125 @@ With Deployments you can easily edit any field/property of the POD template. Sin
 $ source <(kubectl completion zsh)
 ```
 
+
+
+## Imperative commands
+
+
+#### create a pod with nginx image with imperative 
+
+```
+ ~ ➜  kubectl run nginx-pod --image=nginx:alpine
+pod/nginx-pod created
+```
+
+
+#### how to create pod redis with labels
+
+```
+➜  kubectl run redis --image=redis:alpine --labels=tier=db
+pod/redis created
+```
+
+and showing labels
+
+```
+➜  kubectl get po redis --show-labels
+NAME    READY   STATUS    RESTARTS   AGE   LABELS
+redis   1/1     Running   0          84s   tier=db
+```
+
+
+#### how to expose a pod creating a service 
+
+```
+✖ kubectl expose pod redis --name=redis-service --port=6379 --type=ClusterIP
+service/redis-service exposed
+```
+
+```
+➜  kubectl get svc
+NAME            TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+kubernetes      ClusterIP   10.43.0.1      <none>        443/TCP    14m
+redis-service   ClusterIP   10.43.97.172   <none>        6379/TCP   48s
+```
+
+#### create a deployment with image webapp-color and 3 replicas with imperative command
+
+```
+ ➜  kubectl create deployment webapp --image kodekloud/webapp-color --replicas=3
+deployment.apps/webapp created
+```
+
+```
+➜  kubectl get deploy
+NAME     READY   UP-TO-DATE   AVAILABLE   AGE
+webapp   3/3     3            3           59s
+
+ ➜  kubectl get rs
+NAME                DESIRED   CURRENT   READY   AGE
+webapp-7bc4ff899b   3         3         3       70s
+
+➜  kubectl get pods | grep webapp
+webapp-7bc4ff899b-lgbqb   1/1     Running   0          2m16s
+webapp-7bc4ff899b-7mrnj   1/1     Running   0          2m16s
+webapp-7bc4ff899b-t96db   1/1     Running   0          2m16s
+
+```
+
+Instead of grep we can also show labels and filter by app=deployment_name
+
+```
+➜  kubectl get pods -l app=webapp
+NAME                      READY   STATUS    RESTARTS   AGE
+webapp-7bc4ff899b-k4pjm   1/1     Running   0          4m6s
+webapp-7bc4ff899b-vtlg6   1/1     Running   0          4m6s
+webapp-7bc4ff899b-7plv5   1/1     Running   0          4m6s
+```
+
+#### Create a custom-pod running nginx on port 8080
+
+```
+➜  kubectl run custom-nginx --image=nginx --port=8080
+pod/custom-nginx created
+```
+
+#### Create a new namespace
+
+```
+➜  kubectl create ns dev-ns
+namespace/dev-ns created
+```
+
+
+#### Create a new deployment on a dev-ns namespace with the redis image and 2 replicas
+
+```
+➜  kubectl create deployment redis-deploy -n dev-ns --image=redis --replicas=2
+deployment.apps/redis-deploy created
+```
+
+```
+controlplane ~ ➜  kubectl get deploy -n dev-ns
+NAME           READY   UP-TO-DATE   AVAILABLE   AGE
+redis-deploy   2/2     2            2           3m33s
+
+controlplane ~ ➜  kubectl get rs -n dev-ns
+NAME                      DESIRED   CURRENT   READY   AGE
+redis-deploy-546bf56c5f   2         2         2       3m40s
+
+controlplane ~ ➜  kubectl get pods -n dev-ns
+NAME                            READY   STATUS    RESTARTS   AGE
+redis-deploy-546bf56c5f-gzzks   1/1     Running   0          3m49s
+redis-deploy-546bf56c5f-p9b8f   1/1     Running   0          3m49s
+```
+
+
+#### Create a pod and expose it in a service on port 80
+
+```
+$ kubectl run httpd --image=httpd:alpine --port=80 --expose=true
+```
+
+
+
