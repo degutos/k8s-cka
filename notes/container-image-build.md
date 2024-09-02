@@ -167,3 +167,509 @@ No command line argument or environment variable. Picking a Random Color =darkbl
  ```
 
 
+## Concept about container definition file
+
+
+Containers are not mean to run forever like virtual machines, container are mean to run some process or task and close, the container exits.
+
+In the dockerfile we have an instruction called `CMD` that define the default command that the container will run when it is in running state.
+
+In nginx container we have the following line:
+
+```
+CMD ["nginx]
+```
+
+In the mysql image we have:
+
+```
+CMD ["mysqld]
+```
+
+In the sample of ubuntu image we have:
+
+```
+CMD ["bash"]
+```
+
+The problem is the bash is a command that wait for terminal or a command and it will exit with it doesn't find a terminal to attach.
+One option is to append a command to docker run command to override the default command in the container.
+
+```
+docker run ubuntu [command]
+
+docker run ubuntu slep 5
+```
+
+This command will make the container sleeps for 5 seconds and then it exists.
+
+To create a dockerfile with that specific command we can use
+
+```
+FROM Ubuntu
+
+CMD sleep 5
+```
+
+Then we run:
+
+```
+docker build -t ubuntu-sleeper .
+```
+
+```
+docker run ubuntu-sleeper
+```
+
+We should also use the `ENTRYPOINT`  and `CMD` to build a dockerfile
+
+```
+FROM Ubuntu
+
+ENTRYPOINT ["sleep"]
+
+CMD ["5"]
+```
+
+This way we can run simply:
+```
+$ docker run ubuntu-sleeper 10
+```
+
+This will make the ubuntu sleep 10sec 
+
+
+
+## Concept about kubernetes definition file
+
+
+### In docker we can do
+
+```
+docker run --name ubuntu-sleeper ubuntu-sleeper
+
+docker run --name ubuntu-sleeper ubuntu-sleeper 10
+```
+
+## In kubernetes world 
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu-sleeper-pod
+spec:
+  containers:
+    - name: ubuntu-sleeper
+      image: ubuntu-sleeper
+      command: ["sleep2.0"]
+      args: ["10"]
+```
+
+Then we run 
+
+```
+kubectl create -f pod-definition.yml 
+```
+
+So lets compare variables in docker with variable in kubernetes
+
+
+| Docker  | Kubernetes   | 
+|---|---|
+| ENTREYPOINT ["sleep"]  | command: ["sleep"]  | 
+| CMD ["5"]  | args: ["10"]  | 
+
+
+
+## Important Note regarding to editing Pods and Deployment
+
+We can not edit specifications of existing POD other than the following :
+
+```
+spec.containers[*].image
+
+spec.initContainers[*].image
+
+spec.activeDeadlineSeconds
+
+spec.tolerations
+```
+
+If we run kubectl edit pod we won't be able to edit other fields it will deny to save the change because we are trying to edit a field on the pod that is not editable. 
+
+We can save the pod definition in /tmp file, then we can delete pod and recreate with the new file created.
+
+Second option is to generate a new pod definition file:
+
+```
+kubectl get pod webapp -o yaml > my-new-pod.yaml
+```
+
+Then we edit the new file and change it then we delete the pod and recreate it
+
+```
+kubectl create -f my-new-pod.yaml
+```
+
+
+### Deployments
+
+With deployments you can easily edit any field of a POD. Since the pod template is a child of the deployment , with every change the deployment will automatically delete and create a new pod with new changes. 
+
+So if you are asked to edit a property of a POD, change it in the deployment 
+
+```
+kubectl edit deployment my-deployment 
+```
+
+
+## Lab Commands and arguments
+
+Lets create a pod with ubuntu image to run container to sleep for 5000 seconds.
+
+```
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: ubuntu-sleeper-2 
+spec:
+  containers:
+  - name: ubuntu
+    image: ubuntu
+    command: ["sleep","5000"]
+```
+
+Lets start the pod
+
+```
+$ kubectl apply -f ubuntu-sleeper-2.yaml
+```
+
+```
+controlplane ~ ➜  kubectl get pods
+NAME               READY   STATUS    RESTARTS   AGE
+ubuntu-sleeper-2   1/1     Running   0          5s
+```
+
+```
+controlplane ~ ➜  kubectl describe po ubuntu-sleeper-2 
+Name:             ubuntu-sleeper-2
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             controlplane/192.9.33.3
+Start Time:       Mon, 02 Sep 2024 05:42:07 +0000
+Labels:           <none>
+Annotations:      <none>
+Status:           Running
+IP:               10.42.0.10
+IPs:
+  IP:  10.42.0.10
+Containers:
+  ubuntu:
+    Container ID:  containerd://f244bae227381a7dd18a0796275f93aea48b222c44183016bbcd8dbb7f23cdc0
+    Image:         ubuntu
+    Image ID:      docker.io/library/ubuntu@sha256:8a37d68f4f73ebf3d4efafbcf66379bf3728902a8038616808f04e34a9ab63ee
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      sleep
+      5000
+    State:          Running
+      Started:      Mon, 02 Sep 2024 05:42:08 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-jnrdv (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-jnrdv:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  16s   default-scheduler  Successfully assigned default/ubuntu-sleeper-2 to controlplane
+  Normal  Pulling    16s   kubelet            Pulling image "ubuntu"
+  Normal  Pulled     16s   kubelet            Successfully pulled image "ubuntu" in 149ms (149ms including waiting). Image size: 29710357 bytes.
+  Normal  Created    16s   kubelet            Created container ubuntu
+  Normal  Started    16s   kubelet            Started container ubuntu
+  ```
+
+  Notice that we have the Command set for the container ubuntu
+
+  ```
+     Command:
+      sleep
+      5000
+```
+
+### Causing an error in the yaml file
+
+```
+apiVersion: v1
+kind: Pod 
+metadata:
+  name: ubuntu-sleeper-3
+spec:
+  containers:
+  - name: ubuntu
+    image: ubuntu
+    command:
+      - "sleep"
+      - 1200
+```
+
+Lets fix the mistake above
+
+```
+controlplane ~ ➜  cat ubuntu-sleeper-3.yaml 
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: ubuntu-sleeper-3 
+spec:
+  containers:
+  - name: ubuntu
+    image: ubuntu
+    command:
+      - "sleep"
+      - "1200"
+```
+
+```
+~ ➜  kubectl apply -f ubuntu-sleeper-3.yaml 
+pod/ubuntu-sleeper-3 created
+```
+
+```
+ ~ ➜  kubectl get pods
+NAME               READY   STATUS    RESTARTS   AGE
+ubuntu-sleeper     1/1     Running   0          13m
+ubuntu-sleeper-2   1/1     Running   0          8m50s
+ubuntu-sleeper-3   1/1     Running   0          5s
+```
+
+Lets confirm the describe command and the command set
+
+```
+~ ➜  kubectl describe po ubuntu-sleeper-3 | grep -i command: -A2
+    Command:
+      sleep
+      1200
+```
+
+### Editing and changing pod ubuntu-sleeper-3 to sleep 2000 seconds
+
+```
+~ ➜  kubectl edit po ubuntu-sleeper-3 
+error: pods "ubuntu-sleeper-3" is invalid
+A copy of your changes has been stored to "/tmp/kubectl-edit-1810510277.yaml"
+error: Edit cancelled, no valid changes were saved.
+```
+
+We changed the command:
+
+```
+   Command:
+      sleep
+      2000
+```
+
+Then we need to delete the running pod to start up it again from the file saved in /tmp
+
+```
+~ ➜  kubectl delete po ubuntu-sleeper-3
+pod "ubuntu-sleeper-3" deleted
+
+~ ➜  kubectl apply -f /tmp/kubectl-edit-1810510277.yaml 
+pod/ubuntu-sleeper-3 created
+
+ ~ ➜  kubectl get pods
+NAME               READY   STATUS    RESTARTS   AGE
+ubuntu-sleeper     1/1     Running   0          20m
+ubuntu-sleeper-2   1/1     Running   0          16m
+ubuntu-sleeper-3   1/1     Running   0          35s
+
+~ ➜  kubectl describe po ubuntu-sleeper-3 | grep -i command: -A2
+    Command:
+      sleep
+      2000
+```
+
+### Dockerfile sample
+
+```
+➜  cat Dockerfile
+FROM python:3.6-alpine
+
+RUN pip install flask
+
+COPY . /opt/
+
+EXPOSE 8080
+
+WORKDIR /opt
+
+ENTRYPOINT ["python", "app.py"]
+```
+
+Notice that the command to run during container startup is:
+
+```
+ENTRYPOINT ["python", "app.py"]
+```
+
+lets take another sample 
+
+```
+➜  cat Dockerfile2 
+FROM python:3.6-alpine
+
+RUN pip install flask
+
+COPY . /opt/
+
+EXPOSE 8080
+
+WORKDIR /opt
+
+ENTRYPOINT ["python", "app.py"]
+
+CMD ["--color", "red"]
+```
+
+The above command has the following command at startup:
+
+```
+python app.py --color red
+```
+
+#### Docker file and pod yaml file 
+
+Consider the following dockerfile 
+
+```
+FROM python:3.6-alpine
+
+RUN pip install flask
+
+COPY . /opt/
+
+EXPOSE 8080
+
+WORKDIR /opt
+
+ENTRYPOINT ["python", "app.py"]
+
+CMD ["--color", "red"]
+```
+
+The image will be created. After that we will consider the following yaml file
+
+```
+apiVersion: v1
+kind: Pod 
+metadata:
+  name: webapp-green
+  labels:
+      name: webapp-green
+spec:
+  containers:
+  - name: simple-webapp
+    image: kodekloud/webapp-color
+    command: ["--color","green"]
+```
+
+Considering these 2 files above the command to run during pod execution is
+
+```
+--color green
+```
+
+
+#### Docker file and pod yaml file - another sample
+
+
+Consider this dockerfile
+```
+FROM python:3.6-alpine
+
+RUN pip install flask
+
+COPY . /opt/
+
+EXPOSE 8080
+
+WORKDIR /opt
+
+ENTRYPOINT ["python", "app.py"]
+
+CMD ["--color", "red"]
+```
+
+
+Consider this pod yaml file:
+
+```
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: webapp-green
+  labels:
+      name: webapp-green 
+spec:
+  containers:
+  - name: simple-webapp
+    image: kodekloud/webapp-color
+    command: ["python", "app.py"]
+    args: ["--color", "pink"]
+```
+
+The command to run at pod running level is:
+
+```
+python app.py --color pink 
+```
+
+
+#### Create a pod that displays a blue background but set arguments to green 
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp-green
+  labels: 
+    name: webapp-green
+spec:
+  containers:
+   - name: webapp-green
+     image: kodekloud/webapp-color
+     args: ["--color","green"]
+
+```
+
+
+
+
+
+
+
+
+
