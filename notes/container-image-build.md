@@ -499,7 +499,15 @@ pod "ubuntu-sleeper-3" deleted
 
 ~ ➜  kubectl apply -f /tmp/kubectl-edit-1810510277.yaml 
 pod/ubuntu-sleeper-3 created
+```
 
+We could also use the replace command instead of deleting the pod and apply with -f and set the new /tmp yaml file. Lets have a look how to use the replace command:
+
+```
+$ kubectl replace --force -f /tmp/kubectl-edit-1810510277.yaml 
+```
+
+```
  ~ ➜  kubectl get pods
 NAME               READY   STATUS    RESTARTS   AGE
 ubuntu-sleeper     1/1     Running   0          20m
@@ -511,6 +519,8 @@ ubuntu-sleeper-3   1/1     Running   0          35s
       sleep
       2000
 ```
+
+
 
 ### Dockerfile sample
 
@@ -665,7 +675,11 @@ spec:
 
 ```
 
+Another way of creating this pod yml file is to run the kubectl command with the arguments we want:
 
+```
+$ kubectl run webapp-green --image=kodekloud/webapp-color -- --color green
+```
 
 
 
