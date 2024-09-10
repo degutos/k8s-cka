@@ -683,6 +683,348 @@ $ kubectl run webapp-green --image=kodekloud/webapp-color -- --color green
 
 
 
+### Lets have a look at the environment variable name and value set for this pod 
+
+```
+controlplane ~ ➜  k describe po webapp-color 
+Name:             webapp-color
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             controlplane/192.10.18.9
+Start Time:       Tue, 10 Sep 2024 05:52:14 +0000
+Labels:           name=webapp-color
+Annotations:      <none>
+Status:           Running
+IP:               10.42.0.9
+IPs:
+  IP:  10.42.0.9
+Containers:
+  webapp-color:
+    Container ID:   containerd://ee515151870b1fc29409af051e4e98d3aa608e0562074d84f34914499634e074
+    Image:          kodekloud/webapp-color
+    Image ID:       docker.io/kodekloud/webapp-color@sha256:99c3821ea49b89c7a22d3eebab5c2e1ec651452e7675af243485034a72eb1423
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Tue, 10 Sep 2024 05:52:19 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      APP_COLOR:  pink
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-4lr8c (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-4lr8c:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  71s   default-scheduler  Successfully assigned default/webapp-color to controlplane
+  Normal  Pulling    70s   kubelet            Pulling image "kodekloud/webapp-color"
+  Normal  Pulled     66s   kubelet            Successfully pulled image "kodekloud/webapp-color" in 4.437s (4.437s including waiting). Image size: 31777918 bytes.
+  Normal  Created    66s   kubelet            Created container webapp-color
+  Normal  Started    66s   kubelet            Started container webapp-color
+  ```
+
+  As we see:
+
+  ```
+      Environment:
+      APP_COLOR:  pink
+```
+
+
+### Changing pod variable value from pink to green
+
+In order to change the value we will need edit the pod change the variable value and save the pod yml file into /tmp folder, then delete the pod with variable pink and recreate the new pod with variable green
+
+```
+~ ➜  k edit po webapp-color 
+error: pods "webapp-color" is invalid
+A copy of your changes has been stored to "/tmp/kubectl-edit-1335800941.yaml"
+error: Edit cancelled, no valid changes were saved.
+```
+
+Let now delete the pod
+
+```
+~ ✖ k delete po webapp-color 
+pod "webapp-color" deleted
+```
+
+Lets now recreate the pod 
+
+```
+ ~ ➜  k apply -f /tmp/kubectl-edit-1335800941.yaml
+pod/webapp-color created
+```
+
+```
+~ ➜  k get pods 
+NAME           READY   STATUS    RESTARTS   AGE
+webapp-color   1/1     Running   0          12s
+```
+
+lets check now the new pod variable value:
+
+```
+~ ➜  k describe po webapp-color 
+Name:             webapp-color
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             controlplane/192.10.18.9
+Start Time:       Tue, 10 Sep 2024 05:59:43 +0000
+Labels:           name=webapp-color
+Annotations:      <none>
+Status:           Running
+IP:               10.42.0.10
+IPs:
+  IP:  10.42.0.10
+Containers:
+  webapp-color:
+    Container ID:   containerd://86c74e413dd66bf0355633599725d81b0b9f7f4e182a74e2f299bc10967197d1
+    Image:          kodekloud/webapp-color
+    Image ID:       docker.io/kodekloud/webapp-color@sha256:99c3821ea49b89c7a22d3eebab5c2e1ec651452e7675af243485034a72eb1423
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Tue, 10 Sep 2024 05:59:44 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      APP_COLOR:  green
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-4lr8c (ro)
+Conditions:
+...
+```
+
+## Configmaps 
+
+Lets check how many configmaps our system has:
+
+```
+~ ➜  k get configmaps
+NAME               DATA   AGE
+kube-root-ca.crt   1      20m
+db-config          3      14s
+```
+
+
+Lets describe the db-config configmap:
+
+```
+~ ➜  kubectl describe cm db-config
+Name:         db-config
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Data
+====
+DB_PORT:
+----
+3306
+DB_HOST:
+----
+SQL01.example.com
+DB_NAME:
+----
+SQL01
+
+BinaryData
+====
+
+Events:  <none>
+```
+
+Notice above that we have DB_PORT, DB_HOST, DB_NAME, and others
+
+
+### Creating a configmap with the following spec
+
+```
+ConfigMap Name: webapp-config-map
+Data: APP_COLOR=darkblue
+Data: APP_OTHER=disregard
+```
+
+The command to create this configmap is:
+
+```
+ ~ ➜  kubectl create configmap --from-literal=APP_COLOR=darkblue --from-literal=APP_OTHER=disregard webapp-config-map
+configmap/webapp-config-map created
+```
+
+Lets check now the configmap created:
+
+```
+~ ➜  kubectl describe cm webapp-config-map 
+Name:         webapp-config-map
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Data
+====
+APP_COLOR:
+----
+darkblue
+APP_OTHER:
+----
+disregard
+
+BinaryData
+====
+
+Events:  <none>
+
+```
+
+### Editing the configmap created and removing the variable APP_OTHER
+
+```
+~ ➜  kubectl edit cm webapp-config-map 
+configmap/webapp-config-map edited
+```
+
+Lets check the update made:
+
+```
+~ ➜  kubectl describe  cm webapp-config-map 
+Name:         webapp-config-map
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Data
+====
+APP_COLOR:
+----
+darkblue
+
+BinaryData
+====
+
+Events:  <none>
+
+```
+
+
+### Editing the pod to use the new configmap webapp-config-map the key APP_COLOR
+
+Lets make this change in the pod spec yaml file to use the config map
+
+```
+  containers:
+  - env:
+    - name: APP_COLOR
+      valueFrom:
+        configMapKeyRef:
+          name: webapp-config-map
+          key: APP_COLOR
+```
+
+
+```
+~ ➜  kubectl edit po webapp-color 
+error: pods "webapp-color" is invalid
+A copy of your changes has been stored to "/tmp/kubectl-edit-3563387746.yaml"
+error: Edit cancelled, no valid changes were saved.
+```
+
+
+```
+~ ➜  kubectl delete po webapp-color 
+pod "webapp-color" deleted
+
+ ~ ➜  kubectl apply -f /tmp/kubectl-edit-3563387746.yaml
+pod/webapp-color created
+```
+
+lets describe the new pod created 
+
+```
+~ ➜  kubectl describe po webapp-color 
+Name:             webapp-color
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             controlplane/192.10.18.9
+Start Time:       Tue, 10 Sep 2024 06:28:49 +0000
+Labels:           name=webapp-color
+Annotations:      <none>
+Status:           Running
+IP:               10.42.0.11
+IPs:
+  IP:  10.42.0.11
+Containers:
+  webapp-color:
+    Container ID:   containerd://970d97285c07421b0b63d59b0d5a37abf8d1ca72a2700640abf9bb0106ebbf93
+    Image:          kodekloud/webapp-color
+    Image ID:       docker.io/kodekloud/webapp-color@sha256:99c3821ea49b89c7a22d3eebab5c2e1ec651452e7675af243485034a72eb1423
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Tue, 10 Sep 2024 06:28:50 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      APP_COLOR:  <set to the key 'APP_COLOR' of config map 'webapp-config-map'>  Optional: false
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-4lr8c (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-4lr8c:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason   Age   From     Message
+  ----    ------   ----  ----     -------
+  Normal  Pulling  51s   kubelet  Pulling image "kodekloud/webapp-color"
+  Normal  Pulled   50s   kubelet  Successfully pulled image "kodekloud/webapp-color" in 160ms (160ms including waiting). Image size: 31777918 bytes.
+  Normal  Created  50s   kubelet  Created container webapp-color
+  Normal  Started  50s   kubelet  Started container webapp-color
+```
+
+As we notice above:
+
+```
+    Environment:
+      APP_COLOR:  <set to the key 'APP_COLOR' of config map 'webapp-config-map'>  Optional: false
+```
+
+
 
 
 
